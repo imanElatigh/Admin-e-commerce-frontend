@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  e-commerce-admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "20103:20102"
+    restart: always
+    networks:
+      - e-commerce-admin
+
+networks:
+  e-commerce-admin:
+    driver: bridge
