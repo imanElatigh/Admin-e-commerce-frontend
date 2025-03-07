@@ -103,3 +103,17 @@ body {
 .logout {
   margin-top: 220px;
 }
+
+.clickable {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  padding: 10px;
+}
+
+.clickable:hover {
+  background-color: #f4f4f4;
+  color: #000;
+}

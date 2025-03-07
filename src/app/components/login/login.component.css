@@ -2,7 +2,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .body {
@@ -14,11 +14,9 @@
   background: #f9f9f9;
 }
 
-
 .logo img {
-  width: 300px ;
+  width: 300px;
 }
-
 
 .login-container {
   background: white;
@@ -69,6 +67,28 @@
   border-color: #75baa3;
 }
 
+/* Validation styles */
+.form-group input.ng-invalid.ng-touched {
+  border-color: #e74c3c;
+}
+
+.validation-error {
+  color: #e74c3c;
+  font-size: 12px;
+  margin-top: 5px;
+  font-weight: 500;
+}
+
+.error-message {
+  background-color: #fdeaea;
+  color: #e74c3c;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  border-left: 4px solid #e74c3c;
+}
+
 .remember-forgot {
   display: flex;
   justify-content: space-between;
@@ -87,6 +107,7 @@
 .forgot-password {
   color: #75baa3;
   text-decoration: none;
+  font-weight: 600;
 }
 
 .forgot-password:hover {
@@ -107,7 +128,12 @@
 }
 
 .login-button:hover {
-  background: #75baa3;
+  background: #68a692;
+}
+
+.login-button:disabled {
+  background: #a8d5c7;
+  cursor: not-allowed;
 }
 
 .signup-link {
@@ -130,5 +156,12 @@
 @media (max-width: 480px) {
   .login-container {
     padding: 20px;
+    width: 100%;
+  }
+
+  .remember-forgot {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
   }
 }
