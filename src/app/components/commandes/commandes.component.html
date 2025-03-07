@@ -1,0 +1,400 @@
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+/>
+<app-navbar></app-navbar>
+
+<div class="content">
+  <!-- Titre et Filtre -->
+  <div class="header-container">
+    <h1 class="table-title">Mes Commandes</h1>
+    <div class="filter-container">
+      <label for="status-filter">Filtrer par statut :</label>
+      <select
+        id="status-filter"
+        [(ngModel)]="statusFilter"
+        (change)="onFilterChange($event)"
+      >
+        <option value="all">Tous</option>
+        <option value="pending">En attente</option>
+        <option value="confirmed">Confirmée</option>
+        <option value="processing">En traitement</option>
+        <option value="shipped">Expédiée</option>
+        <option value="delivered">Livrée</option>
+        <option value="cancelled">Annulée</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Message d'erreur -->
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+    <button class="close-error-btn" (click)="errorMessage = ''">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- Loading indicator -->
+  <div *ngIf="loading && !showOrderDetails" class="loader-container">
+    <div class="loader"></div>
+  </div>
+
+  <!-- Table des commandes -->
+  <div class="table-container">
+    <table *ngIf="filteredOrders.length > 0">
+      <thead>
+        <tr>
+          <th>Client</th>
+          <th>Téléphone</th>
+          <th>Date</th>
+          <th>Montant Total</th>
+          <th>Statut</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let order of filteredOrders"
+          (click)="viewOrderDetails(order.id)"
+        >
+          <td>{{ order.user.fullName }}</td>
+          <td>{{ order.user.phone }}</td>
+          <td>{{ formatDate(order.createdAt) }}</td>
+          <td class="price">{{ formatPrice(order.totalAmount) }}</td>
+          <td>
+            <span class="status" [ngClass]="getStatusClass(order.status)">
+              {{ getStatusTranslation(order.status) }}
+            </span>
+          </td>
+          <td>
+            <div class="actions">
+              <div class="dropdown">
+                <button
+                  class="action-btn update-btn dropdown-toggle"
+                  (click)="$event.stopPropagation()"
+                >
+                  <i class="fas fa-edit"></i>
+                </button>
+                <div class="dropdown-content">
+                  <a
+                    href="#"
+                    (click)="updateOrderStatus(order.id, 'PENDING', $event)"
+                    >En attente</a
+                  >
+                  <a
+                    href="#"
+                    (click)="updateOrderStatus(order.id, 'CONFIRMED', $event)"
+                    >Confirmée</a
+                  >
+                  <a
+                    href="#"
+                    (click)="updateOrderStatus(order.id, 'PROCESSING', $event)"
+                    >En traitement</a
+                  >
+                  <a
+                    href="#"
+                    (click)="updateOrderStatus(order.id, 'SHIPPED', $event)"
+                    >Expédiée</a
+                  >
+                  <a
+                    href="#"
+                    (click)="updateOrderStatus(order.id, 'DELIVERED', $event)"
+                    >Livrée</a
+                  >
+                  <a
+                    href="#"
+                    (click)="updateOrderStatus(order.id, 'CANCELLED', $event)"
+                    >Annulée</a
+                  >
+                </div>
+              </div>
+              <button
+                class="action-btn delete-btn"
+                (click)="deleteOrder(order.id, $event)"
+              >
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination controls -->
+    <!-- Enhanced Pagination controls -->
+    <div class="pagination-container" *ngIf="totalElements > 0">
+      <button
+        class="pagination-btn"
+        [disabled]="currentPage === 0"
+        [class.disabled]="currentPage === 0"
+        (click)="prevPage()"
+        aria-label="Page précédente"
+      >
+        <i class="fas fa-chevron-left"></i>
+      </button>
+
+      <div class="pagination-pages">
+        <!-- First page button (if not in view) -->
+        <button
+          *ngIf="pagesArray[0] > 0"
+          class="pagination-btn"
+          (click)="goToPage(0)"
+          aria-label="Première page"
+        >
+          1
+        </button>
+
+        <!-- Ellipsis if needed -->
+        <span *ngIf="pagesArray[0] > 1" class="pagination-btn disabled"
+          >...</span
+        >
+
+        <!-- Page numbers -->
+        <button
+          *ngFor="let page of pagesArray"
+          class="pagination-btn"
+          [class.active]="page === currentPage"
+          (click)="goToPage(page)"
+          [attr.aria-label]="'Page ' + (page + 1)"
+          [attr.aria-current]="page === currentPage ? 'page' : null"
+        >
+          {{ page + 1 }}
+        </button>
+
+        <!-- Ellipsis if needed -->
+        <span
+          *ngIf="pagesArray[pagesArray.length - 1] < totalPages - 2"
+          class="pagination-btn disabled"
+          >...</span
+        >
+
+        <!-- Last page button (if not in view) -->
+        <button
+          *ngIf="pagesArray[pagesArray.length - 1] < totalPages - 1"
+          class="pagination-btn"
+          (click)="goToPage(totalPages - 1)"
+          aria-label="Dernière page"
+        >
+          {{ totalPages }}
+        </button>
+      </div>
+
+      <button
+        class="pagination-btn"
+        [disabled]="currentPage === totalPages - 1"
+        [class.disabled]="currentPage === totalPages - 1"
+        (click)="nextPage()"
+        aria-label="Page suivante"
+      >
+        <i class="fas fa-chevron-right"></i>
+      </button>
+
+      <div class="pagination-info">
+        {{ currentPage * pageSize + 1 }}-{{
+          Math.min((currentPage + 1) * pageSize, totalElements)
+        }}
+        sur {{ totalElements }} commandes
+      </div>
+
+      <div class="pagination-size-selector">
+        <label for="page-size">Par page:</label>
+        <select
+          id="page-size"
+          [ngModel]="pageSize"
+          (ngModelChange)="onPageSizeChange($event)"
+        >
+          <option [value]="10">10</option>
+          <option [value]="25">25</option>
+          <option [value]="50">50</option>
+          <option [value]="100">100</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="filteredOrders.length === 0 && !loading" class="empty-state">
+      <i class="fas fa-shopping-cart empty-icon"></i>
+      <p>Aucune commande trouvée</p>
+    </div>
+  </div>
+
+  <!-- Order Details Sidebar -->
+  <div
+    class="sidebar-overlay"
+    [class.active]="showOrderDetails"
+    (click)="closeOrderDetails()"
+  ></div>
+
+  <div class="sidebar" [class.active]="showOrderDetails">
+    <div *ngIf="loading && showOrderDetails" class="sidebar-loader">
+      <div class="loader"></div>
+    </div>
+
+    <div *ngIf="selectedOrder && !loading" class="sidebar-content">
+      <div class="sidebar-header">
+        <h2>Commande #{{ selectedOrder.id }}</h2>
+        <button class="close-btn" (click)="closeOrderDetails()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="sidebar-body">
+        <!-- Status Section -->
+        <div class="status-section">
+          <span class="status-label">Statut:</span>
+          <span class="status" [ngClass]="getStatusClass(selectedOrder.status)">
+            {{ getStatusTranslation(selectedOrder.status) }}
+          </span>
+
+          <div class="status-actions">
+            <div class="dropdown status-dropdown">
+              <button class="change-status-btn">
+                Changer le statut <i class="fas fa-chevron-down"></i>
+              </button>
+              <div class="dropdown-content">
+                <a
+                  href="#"
+                  (click)="
+                    updateOrderStatus(selectedOrder.id, 'PENDING', $event)
+                  "
+                  >En attente</a
+                >
+                <a
+                  href="#"
+                  (click)="
+                    updateOrderStatus(selectedOrder.id, 'CONFIRMED', $event)
+                  "
+                  >Confirmée</a
+                >
+                <a
+                  href="#"
+                  (click)="
+                    updateOrderStatus(selectedOrder.id, 'PROCESSING', $event)
+                  "
+                  >En traitement</a
+                >
+                <a
+                  href="#"
+                  (click)="
+                    updateOrderStatus(selectedOrder.id, 'SHIPPED', $event)
+                  "
+                  >Expédiée</a
+                >
+                <a
+                  href="#"
+                  (click)="
+                    updateOrderStatus(selectedOrder.id, 'DELIVERED', $event)
+                  "
+                  >Livrée</a
+                >
+                <a
+                  href="#"
+                  (click)="
+                    updateOrderStatus(selectedOrder.id, 'CANCELLED', $event)
+                  "
+                  >Annulée</a
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Customer Section -->
+        <div class="detail-section">
+          <h3><i class="fas fa-user"></i> Information Client</h3>
+          <div class="detail-row">
+            <div class="detail-item">
+              <span class="detail-label">Nom complet</span>
+              <span class="detail-value">{{
+                selectedOrder.user.fullName
+              }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Téléphone</span>
+              <span class="detail-value">{{ selectedOrder.user.phone }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Shipping Section -->
+        <div class="detail-section">
+          <h3><i class="fas fa-shipping-fast"></i> Livraison</h3>
+          <div class="detail-row">
+            <div class="detail-item full-width">
+              <span class="detail-label">Adresse</span>
+              <span class="detail-value address">{{
+                selectedOrder.shippingAddress
+              }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Items Section -->
+        <div class="detail-section">
+          <h3>
+            <i class="fas fa-shopping-cart"></i> Produits ({{
+              calculateTotalItems(selectedOrder)
+            }})
+          </h3>
+          <div class="order-items">
+            <div
+              class="order-item"
+              *ngFor="let item of selectedOrder.orderItems"
+            >
+              <div class="item-details">
+                <div class="item-name">{{ item.product.name }}</div>
+                <div class="item-meta">
+                  {{ item.quantity }} × {{ formatPrice(item.priceAtOrder) }}
+                </div>
+              </div>
+              <div class="item-total">
+                {{ formatPrice(item.priceAtOrder * item.quantity) }}
+              </div>
+            </div>
+
+            <div class="order-summary">
+              <div class="summary-row">
+                <span>Sous-total</span>
+                <span>{{ formatPrice(selectedOrder.totalAmount) }}</span>
+              </div>
+
+              <div class="summary-row total">
+                <span>Total</span>
+                <span>{{ formatPrice(selectedOrder.totalAmount) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dates Section -->
+        <div class="detail-section">
+          <h3><i class="fas fa-calendar-alt"></i> Dates</h3>
+          <div class="detail-row">
+            <div class="detail-item">
+              <span class="detail-label">Date de commande</span>
+              <span class="detail-value">{{
+                formatDate(selectedOrder.createdAt)
+              }}</span>
+            </div>
+            <!-- Additional dates could be added here if available in the API -->
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button
+          class="action-button delete-button"
+          (click)="deleteOrder(selectedOrder.id, $event)"
+        >
+          <i class="fas fa-trash"></i> Supprimer la commande
+        </button>
+        <button
+          class="action-button close-button"
+          (click)="closeOrderDetails()"
+        >
+          Fermer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

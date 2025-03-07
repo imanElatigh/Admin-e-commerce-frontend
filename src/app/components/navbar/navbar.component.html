@@ -1,0 +1,32 @@
+<nav class="navbar">
+  <div class="nav-brand">
+    <img src="assets/mpiag.png" alt="Company Logo" class="logo" />
+  </div>
+</nav>
+
+<aside class="sidebar">
+  <ul class="sidebar-menu">
+    <li>
+      <a routerLink="/dashboard" routerLinkActive="active"
+        ><i class="bi bi-house-door"></i> Dashboard</a
+      >
+    </li>
+    <li>
+      <a routerLink="/products" routerLinkActive="active"
+        ><i class="bi bi-box-seam"></i> Produits</a
+      >
+    </li>
+    <li>
+      <a routerLink="/commands" routerLinkActive="active"
+        ><i class="bi bi-cart-check"></i> Commandes</a
+      >
+    </li>
+  </ul>
+  <ul class="sidebar-menu logout">
+    <li>
+      <a href="javascript:void(0)" (click)="logout()"
+        ><i class="bi bi-box-arrow-right"></i> Logout</a
+      >
+    </li>
+  </ul>
+</aside>

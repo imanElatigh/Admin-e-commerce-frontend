@@ -1,0 +1,247 @@
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+/>
+
+<app-navbar></app-navbar>
+
+<!-- Contenu principal -->
+<div class="content">
+  <!-- Conteneur du titre et du bouton -->
+  <div class="header-container">
+    <h1 class="table-title">Liste des Produits</h1>
+    <button class="add-btn" (click)="openModal()">
+      <i class="fas fa-plus"></i> Ajouter un produit
+    </button>
+  </div>
+
+  <!-- Message d'erreur -->
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+    <button class="close-error-btn" (click)="errorMessage = ''">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- Modal -->
+  <div *ngIf="isModalOpen" class="modal active">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>{{ isEditing ? "Modifier" : "Ajouter" }} un produit</h2>
+        <button class="close-btn" (click)="closeModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <form [formGroup]="productForm" (ngSubmit)="saveProduct()">
+        <div class="form-group">
+          <label for="name">Nom :</label>
+          <input type="text" id="name" formControlName="name" />
+          <div
+            *ngIf="
+              productForm.get('name')?.invalid &&
+              productForm.get('name')?.touched
+            "
+            class="error-text"
+          >
+            Le nom est obligatoire
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="category">Catégorie :</label>
+          <select id="category" formControlName="category">
+            <option value="">Sélectionner une catégorie</option>
+            <option value="ALIMENTAIRE">Alimentaire</option>
+            <option value="ELECTROMENAGER">Électroménager</option>
+            <option value="ELECTRONIQUE">Électronique</option>
+          </select>
+          <div
+            *ngIf="
+              productForm.get('category')?.invalid &&
+              productForm.get('category')?.touched
+            "
+            class="error-text"
+          >
+            La catégorie est obligatoire
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description :</label>
+          <textarea
+            id="description"
+            formControlName="description"
+            rows="3"
+          ></textarea>
+          <div
+            *ngIf="
+              productForm.get('description')?.invalid &&
+              productForm.get('description')?.touched
+            "
+            class="error-text"
+          >
+            La description ne peut pas dépasser 1000 caractères
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="stockQuantity">Quantité en stock :</label>
+          <input
+            type="number"
+            id="stockQuantity"
+            formControlName="stockQuantity"
+            min="0"
+          />
+          <div
+            *ngIf="
+              productForm.get('stockQuantity')?.invalid &&
+              productForm.get('stockQuantity')?.touched
+            "
+            class="error-text"
+          >
+            La quantité doit être positive ou nulle
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="price">Prix :</label>
+          <input
+            type="number"
+            id="price"
+            formControlName="price"
+            min="0"
+            step="0.01"
+          />
+          <div
+            *ngIf="
+              productForm.get('price')?.invalid &&
+              productForm.get('price')?.touched
+            "
+            class="error-text"
+          >
+            Le prix doit être positif ou nul
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="image">Image :</label>
+          <input
+            type="file"
+            id="image"
+            accept="image/*"
+            (change)="onFileChange($event)"
+          />
+          <div
+            *ngIf="isEditing && productForm.get('image')?.value"
+            class="current-image"
+          >
+            <p>Image actuelle :</p>
+            <img
+              [src]="productForm.get('image')?.value"
+              alt="Image du produit"
+              class="preview-img"
+            />
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="cancel-btn" (click)="closeModal()">
+            Annuler
+          </button>
+          <button
+            type="submit"
+            class="submit-btn"
+            [disabled]="productForm.invalid || loading"
+          >
+            <span *ngIf="loading" class="spinner"></span>
+            {{ isEditing ? "Modifier" : "Ajouter" }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Loader -->
+  <div *ngIf="loading && !isModalOpen" class="loader-container">
+    <div class="loader"></div>
+  </div>
+
+  <!-- Table des produits -->
+  <div *ngIf="!loading || isModalOpen" class="table-container">
+    <table *ngIf="products.length > 0">
+      <thead>
+        <tr>
+          <th>Image</th>
+          <th>Nom</th>
+          <th>Catégorie</th>
+          <th>Quantité</th>
+          <th>Prix</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let product of products">
+          <td>
+            <img
+              [src]="product.image || 'assets/images/no-image.jpg'"
+              [alt]="product.name"
+              class="product-img"
+            />
+          </td>
+          <td>{{ product.name }}</td>
+          <td>{{ getCategoryTranslation(product.category) }}</td>
+          <td>{{ product.stockQuantity }}</td>
+          <td class="price">
+            {{ product.price | currency : "EUR" : "symbol" : "1.2-2" }}
+          </td>
+          <td>
+            <div class="actions">
+              <button
+                class="action-btn update-btn"
+                (click)="editProduct(product)"
+              >
+                <i class="fas fa-edit"></i>
+              </button>
+              <button
+                class="action-btn delete-btn"
+                (click)="deleteProduct(product.id)"
+              >
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Empty state -->
+    <div *ngIf="products.length === 0 && !loading" class="empty-state">
+      <i class="fas fa-box-open empty-icon"></i>
+      <p>Aucun produit trouvé</p>
+      <button class="add-btn" (click)="openModal()">
+        <i class="fas fa-plus"></i> Ajouter un produit
+      </button>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="totalPages > 1" class="pagination">
+      <button
+        [disabled]="currentPage === 0"
+        (click)="changePage(currentPage - 1)"
+        class="page-btn"
+      >
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <span class="page-info"
+        >Page {{ currentPage + 1 }} sur {{ totalPages }}</span
+      >
+      <button
+        [disabled]="currentPage === totalPages - 1"
+        (click)="changePage(currentPage + 1)"
+        class="page-btn"
+      >
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+</div>

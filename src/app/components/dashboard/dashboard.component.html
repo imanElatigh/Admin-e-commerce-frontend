@@ -1,0 +1,140 @@
+<app-navbar></app-navbar>
+
+<main class="dashboard">
+  <!-- Loading spinner -->
+  <div *ngIf="loading" class="loader-container">
+    <div class="loader"></div>
+  </div>
+
+  <!-- Error message -->
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+    <button class="close-error-btn" (click)="error = ''">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- Dashboard content -->
+  <div *ngIf="!loading && !error && stats">
+    <h1>Tableau de bord</h1>
+
+    <!-- Product statistics cards -->
+    <div class="section-title">
+      <h2>Produits</h2>
+      <span class="total-badge">Total: {{ stats.productCounts.total }}</span>
+    </div>
+
+    <div class="cards-container">
+      <div class="card">
+        <i class="fas fa-shopping-basket"></i>
+        <h3>Produits Alimentaires</h3>
+        <span class="count">{{ stats.productCounts.ALIMENTAIRE }}</span>
+      </div>
+      <div class="card">
+        <i class="fas fa-home"></i>
+        <h3>Produits Électroménagers</h3>
+        <span class="count">{{ stats.productCounts.ELECTROMENAGER }}</span>
+      </div>
+      <div class="card">
+        <i class="fas fa-laptop"></i>
+        <h3>Produits Électroniques</h3>
+        <span class="count">{{ stats.productCounts.ELECTRONIQUE }}</span>
+      </div>
+    </div>
+
+    <!-- Order statistics -->
+    <div class="section-title">
+      <h2>Commandes</h2>
+      <span class="total-badge">Total: {{ stats.orderStats.total }}</span>
+    </div>
+
+    <div class="cards-container">
+      <div
+        class="card status-card"
+        *ngFor="
+          let status of [
+            'PENDING',
+            'CONFIRMED',
+            'PROCESSING',
+            'SHIPPED',
+            'DELIVERED',
+            'CANCELLED'
+          ]
+        "
+      >
+        <div class="status-indicator" [ngClass]="getStatusClass(status)"></div>
+        <h3>{{ getStatusTranslation(status) }}</h3>
+        <span class="count">{{ stats.orderStats[status] }}</span>
+      </div>
+    </div>
+
+    <!-- Charts section -->
+    <div class="charts-container">
+      <!-- Sales chart -->
+      <div class="chart-card">
+        <div *ngIf="barChartOptions">
+          <apx-chart
+            [series]="barChartOptions.series"
+            [chart]="barChartOptions.chart"
+            [xaxis]="barChartOptions.xaxis"
+            [yaxis]="barChartOptions.yaxis"
+            [plotOptions]="barChartOptions.plotOptions"
+            [dataLabels]="barChartOptions.dataLabels"
+            [title]="barChartOptions.title"
+            [colors]="barChartOptions.colors"
+          >
+          </apx-chart>
+        </div>
+      </div>
+
+      <!-- Order Status Pie Chart -->
+      <div class="chart-card">
+        <div *ngIf="pieChartOptions">
+          <apx-chart
+            [series]="pieChartOptions.series"
+            [chart]="pieChartOptions.chart"
+            [labels]="pieChartOptions.labels"
+            [colors]="pieChartOptions.colors"
+            [legend]="pieChartOptions.legend"
+            [title]="pieChartOptions.title"
+          >
+          </apx-chart>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent orders section -->
+    <div class="section-title">
+      <h2>Commandes récentes</h2>
+    </div>
+
+    <div class="table-container">
+      <table *ngIf="stats.recentOrders.length > 0">
+        <thead>
+          <tr>
+            <th>Client</th>
+            <th>Date</th>
+            <th>Montant</th>
+            <th>Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let order of stats.recentOrders">
+            <td>{{ order.user.fullName }}</td>
+            <td>{{ formatDate(order.createdAt) }}</td>
+            <td class="price">{{ formatPrice(order.totalAmount) }}</td>
+            <td>
+              <span class="status" [ngClass]="getStatusClass(order.status)">
+                {{ getStatusTranslation(order.status) }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div *ngIf="stats.recentOrders.length === 0" class="empty-state">
+        <i class="fas fa-shopping-cart empty-icon"></i>
+        <p>Aucune commande récente</p>
+      </div>
+    </div>
+  </div>
+</main>
