@@ -63,7 +63,7 @@ export class DashboardComponent implements OnInit {
   initCharts(): void {
     if (!this.stats) return;
 
-    // Bar chart for sales data
+
     this.barChartOptions = {
       series: [
         {
@@ -113,7 +113,7 @@ export class DashboardComponent implements OnInit {
       (key) => key !== 'total'
     );
 
-    // Add type safety for accessing orderStats with string keys
+
     const statusValues = statusLabels.map((key) => {
       // Type assertion to handle index access
       return orderStats[key as keyof typeof orderStats];
